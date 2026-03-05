@@ -1,0 +1,25 @@
+[tool.flet]
+app_name = "Cashierless Store"
+app_id = "kz.cashierless.app"
+product_name = "Cashierless"
+description = "Бескассовая оплата с помощью ИИ"
+org = "Narxoz University"
+version = "1.0.0"
+
+[tool.flet.permissions.android]
+camera = true
+internet = true
+read_external_storage = true
+
+[build-system]
+requires = ["flet"]
+build-backend = "flet.buildtools.build_backend"
+
+[project]
+name = "cashierless-mobile"
+version = "1.0.0"
+dependencies = [
+    "flet[mobile]>=0.24.0",
+    "flet-camera>=0.1.0",
+    "httpx>=0.27.0",
+]
