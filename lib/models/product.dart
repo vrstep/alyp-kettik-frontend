@@ -3,23 +3,15 @@ import 'dart:convert';
 class Product {
   final int id;
   final String name;
-  final String category;
-  final String desc;
   final int price;
-  final String imagePath;
-  final String barcode;
-  final bool isStock;
+  final int qty;
   final DateTime createdAt;
 
   Product({
     required this.id,
     required this.name,
-    required this.category,
-    required this.desc,
     required this.price,
-    required this.imagePath,
-    this.barcode = "",
-    required this.isStock,
+    this.qty = 1,
     required this.createdAt,
   });
 
@@ -28,12 +20,8 @@ class Product {
     return {
       'id': id,
       'name': name,
-      'category': category,
-      'desc': desc,
       'price': price,
-      'imagePath': imagePath,
-      'barcode': barcode,
-      'isStock': isStock,
+      'quantity': qty,
       'createdAt': createdAt.toIso8601String(),
     };
   }
@@ -43,12 +31,8 @@ class Product {
     return Product(
       id: json['id'],
       name: json['name'],
-      category: json['category'],
-      desc: json['desc'],
       price: json['price'],
-      imagePath: json['imagePath'],
-      barcode: json['barcode'] ?? "",
-      isStock: json['isStock'],
+      qty: json['quantity'],
       createdAt: DateTime.parse(json['createdAt']),
     );
   }

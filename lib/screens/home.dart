@@ -16,6 +16,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   bool isPhotoLoaded = false;
+  bool isLoading = false;
   DataBaseOperations dataBaseOperations = Get.find();
   var cart = Cart(
     id: 1,
@@ -46,6 +47,50 @@ class _HomePageState extends State<HomePage> {
         _image = pickedfile;
       }
     });
+  }
+
+  List<Product> products = [];
+  void getProductsFromJson(dynamic data) {
+    products.clear();
+    for (var item in data) {
+      products.add(
+        Product(
+          id: item["product_id"],
+          name: item["name"],
+          qty: item["quantity"],
+          price: (item["price"] as num).toInt(),
+          createdAt: createdAt,
+        ),
+      );
+    }
+  }
+
+  Future<void> _processImage(XFile image) async {
+    setState(() => isLoading = true);
+    try {
+      final ext = image.path.split('.').last.toLowerCase();
+      final mime = ext == 'png' ? 'image/png' : 'image/jpeg';
+      final bytes = await image.readAsBytes();
+      final record = await dataBaseOperations.uploadPhoto(bytes, mime: mime);
+      if (record == null) return;
+      if (record["recognized_items"] == null) {
+        Get.snackbar("Ошибка", "Неожиданный ответ сервера: $record");
+        return;
+      }
+
+      setState(() {
+        isPhotoLoaded = true;
+        getProductsFromJson(record["recognized_items"]);
+        cart = Cart(
+          id: 1,
+          products: products,
+          totalPrice: (record["total"] as num).toInt(),
+          createdAt: createdAt,
+        );
+      });
+    } finally {
+      setState(() => isLoading = false);
+    }
   }
 
   @override
@@ -80,50 +125,34 @@ class _HomePageState extends State<HomePage> {
                         IconButton(
                           onPressed: () async {
                             await getImageFromGallery();
-                            if (_image != null) {
-                              isPhotoLoaded = true;
-                              final bytes = await _image!.readAsBytes();
-                              final record = await dataBaseOperations
-                                  .uploadPhoto(bytes);
-                              setState(() {
-                                cart = Cart(
-                                  id: record.id,
-                                  products: record.products,
-                                  totalPrice: record.totalPrice,
-                                  createdAt: createdAt,
-                                );
-                              });
-                            } else {
-                              Get.snackbar("Сообщение", "Ничего не выбрано");
-                            }
+                            if (_image != null) await _processImage(_image!);
                           },
                           icon: const Icon(Icons.image),
                         ),
                         IconButton(
                           onPressed: () async {
                             await getImageFromCamera();
-                            if (_image != null) {
-                              isPhotoLoaded = true;
-                              final bytes = await _image!.readAsBytes();
-                              final record = await dataBaseOperations
-                                  .uploadPhoto(bytes);
-                              setState(() {
-                                cart = Cart(
-                                  id: record.id,
-                                  products: record.products,
-                                  totalPrice: record.totalPrice,
-                                  createdAt: createdAt,
-                                );
-                              });
-                            } else {
-                              Get.snackbar("Сообщение", "Ничего не выбрано");
-                            }
+                            if (_image != null) await _processImage(_image!);
                           },
                           icon: const Icon(Icons.photo_camera),
                         ),
                       ],
                     ),
-                    isPhotoLoaded == true
+                    isLoading
+                        ? const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 24),
+                            child: Column(
+                              children: [
+                                CircularProgressIndicator(),
+                                SizedBox(height: 12),
+                                Text(
+                                  "Распознаём товары, подождите...",
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ],
+                            ),
+                          )
+                        : isPhotoLoaded
                         ? PhotoAssetWidget(image: _image!)
                         : const Padding(
                             padding: EdgeInsets.symmetric(horizontal: 8.0),
@@ -133,10 +162,94 @@ class _HomePageState extends State<HomePage> {
                     cart.products.isEmpty
                         ? const SizedBox()
                         : Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                             
-
-
+                              // ── Список товаров ──────────────────────────
+                              const Text(
+                                "Распознанные товары",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                decoration: BoxDecoration(
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                  ),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Column(
+                                  children: [
+                                    ...cart.products.map(
+                                      (p) => Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 12,
+                                          vertical: 8,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                p.name,
+                                                style: const TextStyle(
+                                                  fontSize: 14,
+                                                ),
+                                              ),
+                                            ),
+                                            Text(
+                                              "x${p.qty}",
+                                              style: const TextStyle(
+                                                color: Colors.grey,
+                                                fontSize: 13,
+                                              ),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Text(
+                                              "${(p.price * p.qty).toStringAsFixed(0)} ₸",
+                                              style: const TextStyle(
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                    // ── Итого ──────────────────────────────
+                                    const Divider(height: 1),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 12,
+                                        vertical: 10,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Text(
+                                            "Итого",
+                                            style: TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                            ),
+                                          ),
+                                          Text(
+                                            "${cart.totalPrice.toStringAsFixed(0)} ₸",
+                                            style: const TextStyle(
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 15,
+                                              color: Colors.blue,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              // ── Поля карты ─────────────────────────────
                               MyInputWidget(
                                 inputName: "Номер карты",
                                 textEditingController: cardNumber,
@@ -149,25 +262,27 @@ class _HomePageState extends State<HomePage> {
                                 inputName: "CVV",
                                 textEditingController: cvv,
                               ),
+
+                              MyButtonWidget(
+                                textButton: "Оплатить",
+                                fn: () async {
+                                  Get.defaultDialog(
+                                    title: 'Внимание',
+                                    radius: 12,
+                                    textCancel: "Нет",
+                                    textConfirm: "Да",
+                                    middleText:
+                                        "Вы действительно хотите оплатить?",
+                                    onConfirm: () async {
+                                      Get.to(() => const ThankyouPage());
+                                    },
+                                    confirmTextColor: Colors.white,
+                                    buttonColor: Colors.blue,
+                                  );
+                                },
+                              ),
                             ],
                           ),
-                    MyButtonWidget(
-                      textButton: "Оплатить",
-                      fn: () async {
-                        Get.defaultDialog(
-                          title: 'Внимание',
-                          radius: 12,
-                          textCancel: "Нет",
-                          textConfirm: "Да",
-                          middleText: "Вы действительно хотите оплатить?",
-                          onConfirm: () async {
-                            Get.to(() => const ThankyouPage());
-                          },
-                          confirmTextColor: Colors.white,
-                          buttonColor: Colors.blue,
-                        );
-                      },
-                    ),
                   ],
                 ),
               ),

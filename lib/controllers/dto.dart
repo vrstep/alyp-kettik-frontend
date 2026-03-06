@@ -2,82 +2,57 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:get/get.dart';
+import 'package:http/http.dart' as http;
 
-import '../models/models.dart';
 import '../utils/server.dart';
 
-class Provider extends GetConnect {
-  Future<dynamic> getDataFromServer(String url) => get(
-    url,
-    headers: {
-      'Accept': 'application/json',
-      'User-Agent': 'RapidAPI/4.2.0 (Macintosh; OS X/14.3.1) GCDHTTPRequest',
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-  );
-
-  Future<dynamic> sendDataToServer(String url, body) => post(
-    url,
-    body,
-    headers: {
-      'Accept': 'application/json',
-      'Connection': 'close',
-      'User-Agent': 'RapidAPI/4.2.0 (Macintosh; OS X/14.3.1) GCDHTTPRequest',
-    },
-    contentType: 'multipart/form-data',
-  );
-
-  Future<dynamic> updateDataOnServer(
-    String url,
-    int id,
-    Map<String, dynamic> body,
-  ) => patch(
-    "$url/$id",
-    body,
-    headers: {
-      'Accept': 'application/json',
-      'User-Agent': 'RapidAPI/4.2.0 (Macintosh; OS X/14.3.1) GCDHTTPRequest',
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-  );
-
-  Future<dynamic> deleteDataOnServer(String url, id) => delete(
-    "$url?id=$id",
-    headers: {
-      'Accept': 'application/json',
-      'User-Agent': 'RapidAPI/4.2.0 (Macintosh; OS X/14.3.1) GCDHTTPRequest',
-      'Content-Type': 'application/json; charset=UTF-8',
-    },
-  );
-}
 
 class DataBaseOperations extends GetxController {
-  List<Product> products = [];
-
   String currentDate = DateTime.now().toString().substring(0, 10);
 
-  dynamic uploadPhoto(Uint8List file) async {
-    dynamic answer = {};
-    final formData = FormData({
-      'file': MultipartFile(file, filename: "корзина.jpg"),
-    });
-    await Provider().sendDataToServer(uploadFileUrl, formData).then((response) {
-      if (response.status.hasError) {
-        Get.snackbar(
-          "Error",
-          "Failed to upload document: ${response.statusText}",
-        );
-        answer = null;
-        return answer;
-      } else if (response.body == null) {
-        Get.snackbar("Error", "Received null response from server");
-        answer = null;
-        return answer;
-      } else {
-        answer = jsonDecode(response.bodyString);
-        return answer;
-      }
-    });
-    return answer;
+  dynamic uploadPhoto(Uint8List file, {String mime = 'image/jpeg'}) async {
+    final ext = mime == 'image/png' ? 'png' : 'jpg';
+
+    final uri = Uri.parse(uploadFileUrl);
+    final request = http.MultipartRequest('POST', uri)
+      ..files.add(
+        http.MultipartFile.fromBytes('file', file, filename: 'basket.$ext'),
+      );
+
+    print(
+      "[uploadPhoto] sending to: $uploadFileUrl, mime=$mime, size=${file.length}",
+    );
+
+    http.StreamedResponse streamed;
+    try {
+      streamed = await request.send().timeout(const Duration(seconds: 120));
+    } catch (e) {
+      Get.snackbar(
+        "Ошибка",
+        "Таймаут или нет соединения: $e",
+        duration: const Duration(seconds: 5),
+      );
+      return null;
+    }
+
+    final body = await streamed.stream.bytesToString();
+    print("[uploadPhoto] status: ${streamed.statusCode}");
+    print("[uploadPhoto] body: $body");
+
+    if (streamed.statusCode != 200) {
+      Get.snackbar(
+        "Ошибка сервера",
+        "Код ${streamed.statusCode}: $body",
+        duration: const Duration(seconds: 5),
+      );
+      return null;
+    }
+
+    try {
+      return jsonDecode(body);
+    } catch (e) {
+      Get.snackbar("Ошибка", "Не удалось разобрать ответ: $e");
+      return null;
+    }
   }
 }

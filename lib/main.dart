@@ -18,6 +18,7 @@ class MyApp extends StatelessWidget {
       title: 'Computer Vision Cashierless App',
       theme: ThemeData(primarySwatch: Colors.blue),
       home: const HomePage(),
+      debugShowCheckedModeBanner: false,
     );
   }
 }
