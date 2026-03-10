@@ -93,6 +93,23 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
+  void _clearCart() {
+    setState(() {
+      products.clear();
+      isPhotoLoaded = false;
+      _image = null;
+      cart = Cart(
+        id: 1,
+        products: [],
+        totalPrice: 0,
+        createdAt: DateTime.now(),
+      );
+      cardNumber.clear();
+      cvv.clear();
+      date.clear();
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -124,6 +141,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         IconButton(
                           onPressed: () async {
+                            _clearCart();
                             await getImageFromGallery();
                             if (_image != null) await _processImage(_image!);
                           },
@@ -131,6 +149,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         IconButton(
                           onPressed: () async {
+                            _clearCart();
                             await getImageFromCamera();
                             if (_image != null) await _processImage(_image!);
                           },

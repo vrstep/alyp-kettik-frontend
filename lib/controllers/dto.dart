@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 import 'package:get/get.dart';
@@ -19,10 +18,6 @@ class DataBaseOperations extends GetxController {
         http.MultipartFile.fromBytes('file', file, filename: 'basket.$ext'),
       );
 
-    print(
-      "[uploadPhoto] sending to: $uploadFileUrl, mime=$mime, size=${file.length}",
-    );
-
     http.StreamedResponse streamed;
     try {
       streamed = await request.send().timeout(const Duration(seconds: 120));
@@ -36,8 +31,6 @@ class DataBaseOperations extends GetxController {
     }
 
     final body = await streamed.stream.bytesToString();
-    print("[uploadPhoto] status: ${streamed.statusCode}");
-    print("[uploadPhoto] body: $body");
 
     if (streamed.statusCode != 200) {
       Get.snackbar(
