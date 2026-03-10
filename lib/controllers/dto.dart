@@ -5,13 +5,15 @@ import 'package:http/http.dart' as http;
 
 import '../utils/server.dart';
 
-
 class DataBaseOperations extends GetxController {
   String currentDate = DateTime.now().toString().substring(0, 10);
 
-  dynamic uploadPhoto(Uint8List file, {String mime = 'image/jpeg'}) async {
+  dynamic uploadPhoto(
+    Uint8List file,
+    http.Client client, {
+    String mime = 'image/jpeg',
+  }) async {
     final ext = mime == 'image/png' ? 'png' : 'jpg';
-
     final uri = Uri.parse(uploadFileUrl);
     final request = http.MultipartRequest('POST', uri)
       ..files.add(
@@ -20,8 +22,15 @@ class DataBaseOperations extends GetxController {
 
     http.StreamedResponse streamed;
     try {
-      streamed = await request.send().timeout(const Duration(seconds: 120));
+      streamed = await client
+          .send(request)
+          .timeout(const Duration(seconds: 120));
     } catch (e) {
+      // Если клиент закрыт — тихо выходим
+      if (e is http.ClientException ||
+          e.toString().contains('Connection closed')) {
+        return null;
+      }
       Get.snackbar(
         "Ошибка",
         "Таймаут или нет соединения: $e",
@@ -31,7 +40,6 @@ class DataBaseOperations extends GetxController {
     }
 
     final body = await streamed.stream.bytesToString();
-
     if (streamed.statusCode != 200) {
       Get.snackbar(
         "Ошибка сервера",
@@ -40,7 +48,6 @@ class DataBaseOperations extends GetxController {
       );
       return null;
     }
-
     try {
       return jsonDecode(body);
     } catch (e) {
