@@ -14,3 +14,6 @@ const String sessionActiveUrl = "$fastAPIUrl/sessions/active";
 const String sessionCompleteUrl = "$fastAPIUrl/sessions/complete";
 String sessionCartUrl(String sessionId) =>
     "$fastAPIUrl/sessions/$sessionId/cart";
+
+// Products endpoints
+const String productsUrl = "$fastAPIUrl/products";
