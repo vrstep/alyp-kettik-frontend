@@ -58,7 +58,6 @@ fastlane/screenshots
 fastlane/test_output
 fastlane/readme.md
 
-
 ### https://raw.github.com/github/gitignore/80a8803b004013d17291196825a327b9e871f009/Dart.gitignore
 
 # See https://www.dartlang.org/guides/libraries/private-files
@@ -74,7 +73,6 @@ pubspec.lock
 # Directory created by dartdoc
 # If you don't generate documentation locally you can remove this line.
 doc/api/
-
 
 ### https://raw.github.com/github/gitignore/80a8803b004013d17291196825a327b9e871f009/Global/Linux.gitignore
 
@@ -108,7 +106,6 @@ out/
 # JIRA plugin
 atlassian-ide-plugin.xml
 
-
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
 crashlytics.properties
@@ -124,7 +121,6 @@ fabric.properties
 
 # Icon must end with two \r
 Icon
-
 
 # Thumbnails
 ._*
@@ -145,7 +141,6 @@ Network Trash Folder
 Temporary Items
 .apdisk
 
-
 ### https://raw.github.com/github/gitignore/80a8803b004013d17291196825a327b9e871f009/Global/Vim.gitignore
 
 # Swap
@@ -164,7 +159,6 @@ Session.vim
 tags
 # Persistent undo
 [._]*.un~
-
 
 ### https://raw.github.com/github/gitignore/80a8803b004013d17291196825a327b9e871f009/Global/Xcode.gitignore
 
@@ -192,7 +186,6 @@ DerivedData/
 *.perspectivev3
 !default.perspectivev3
 
-
 ### https://raw.github.com/github/gitignore/80a8803b004013d17291196825a327b9e871f009/Global/VisualStudioCode.gitignore
 
 .vscode/*
@@ -201,13 +194,13 @@ DerivedData/
 !.vscode/launch.json
 !.vscode/extensions.json
 
-
 ## Custom
 # Google API key and other resources
 GoogleService-Info.plist
 google-services.json
 # Plugins (already resolved through pubspec.yaml)
 .flutter-plugins
+.flutter-plugins-dependencies
 pb_data
 pb_migrations
 pocketbase
@@ -215,3 +208,6 @@ firebase-service.json
 assetlinks.json
 .pn8
 # openapi.json
+
+# FVM Version Cache
+.fvm/
