@@ -3,7 +3,7 @@ import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
 import 'register_screen.dart';
-import 'qr_scanner_screen.dart';
+import 'main_shell.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -108,7 +108,7 @@ class _LoginScreenState extends State<LoginScreen> {
                                     _passwordCtrl.text,
                                   );
                                   if (ok) {
-                                    Get.offAll(() => const QrScannerScreen());
+                                    Get.offAll(() => const MainShell());
                                   }
                                 },
                           style: ElevatedButton.styleFrom(
