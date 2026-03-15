@@ -4,7 +4,6 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../controllers/session_controller.dart';
 import '../controllers/auth_controller.dart';
-import 'home.dart';
 import 'login_screen.dart';
 
 class QrScannerScreen extends StatefulWidget {
@@ -36,7 +35,7 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
     final ok = await session.enterStore(barcode.rawValue!);
 
     if (ok) {
-      Get.offAll(() => const HomePage());
+      Get.back(result: true);
     } else {
       // Let user scan again
       setState(() => _hasScanned = false);
