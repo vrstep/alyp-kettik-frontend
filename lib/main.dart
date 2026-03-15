@@ -3,10 +3,8 @@ import 'package:get/get.dart';
 
 import '../controllers/init.dart' as ic;
 import '../controllers/auth_controller.dart';
-import '../controllers/session_controller.dart';
 import '../screens/login_screen.dart';
-import '../screens/qr_scanner_screen.dart';
-import '../screens/home.dart';
+import '../screens/main_shell.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -24,6 +22,18 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
         useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF8F9FA),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Colors.white,
+          elevation: 0,
+          scrolledUnderElevation: 0.5,
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 18,
+            fontWeight: FontWeight.w600,
+          ),
+          iconTheme: IconThemeData(color: Colors.black87),
+        ),
       ),
       debugShowCheckedModeBanner: false,
       home: const AuthGate(),
@@ -31,7 +41,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/// Decides the initial screen based on auth and session state.
+/// Decides the initial screen based on auth state.
 class AuthGate extends StatelessWidget {
   const AuthGate({super.key});
 
@@ -43,17 +53,7 @@ class AuthGate extends StatelessWidget {
       if (!auth.isLoggedIn) {
         return const LoginScreen();
       }
-
-      // Logged in — check for active session
-      final session = Get.find<SessionController>();
-      session.fetchActiveSession();
-
-      return Obx(() {
-        if (session.hasActiveSession) {
-          return const HomePage();
-        }
-        return const QrScannerScreen();
-      });
+      return const MainShell();
     });
   }
 }

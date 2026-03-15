@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
-import 'qr_scanner_screen.dart';
+import 'main_shell.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -131,7 +131,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     _passwordCtrl.text,
                                   );
                                   if (ok) {
-                                    Get.offAll(() => const QrScannerScreen());
+                                    Get.offAll(() => const MainShell());
                                   }
                                 },
                           style: ElevatedButton.styleFrom(
