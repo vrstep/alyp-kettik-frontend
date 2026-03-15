@@ -104,6 +104,35 @@ class SessionController extends GetxController {
     } catch (_) {}
   }
 
+  /// Remove an item from the session cart.
+  Future<void> removeFromCart(int productId) async {
+    if (sessionId == null) return;
+    try {
+      await http.delete(
+        Uri.parse('${sessionCartUrl(sessionId!)}/$productId'),
+        headers: _auth.authHeaders,
+      );
+      await fetchCart();
+    } catch (_) {}
+  }
+
+  /// Update quantity of a cart item.
+  Future<void> updateCartItemQty(int productId, int quantity) async {
+    if (sessionId == null) return;
+    if (quantity <= 0) {
+      await removeFromCart(productId);
+      return;
+    }
+    try {
+      await http.put(
+        Uri.parse('${sessionCartUrl(sessionId!)}/$productId'),
+        headers: _auth.authHeaders,
+        body: jsonEncode({'quantity': quantity}),
+      );
+      await fetchCart();
+    } catch (_) {}
+  }
+
   /// Complete the shopping session.
   Future<void> completeSession() async {
     isLoading.value = true;
