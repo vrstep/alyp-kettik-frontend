@@ -1,4 +1,4 @@
-const String fastAPIUrl = "http://192.168.100.99:8000";
+const String fastAPIUrl = "https://alyp-kettik-backend.onrender.com";
 // const String fastAPIUrl =+
 //     "https://dalia-incomparable-unobviously.ngrok-free.dev";
 const String uploadFileUrl = "$fastAPIUrl/recognize/file";

@@ -292,9 +292,38 @@ class _CameraScreenState extends State<CameraScreen> {
           ],
         ),
         const SizedBox(height: 8),
-        Text(
-          '${_recognizedItems.length} item(s) added to cart',
-          style: TextStyle(color: Colors.grey.shade600),
+        Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.blue.shade200),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.smart_toy_rounded,
+                      size: 14, color: Colors.blue.shade600),
+                  const SizedBox(width: 4),
+                  Text(
+                    'YOLO Detection',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.blue.shade700,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Text(
+              '${_recognizedItems.length} item(s) added to cart',
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+          ],
         ),
         const SizedBox(height: 16),
         Expanded(
@@ -305,7 +334,15 @@ class _CameraScreenState extends State<CameraScreen> {
               final item = _recognizedItems[i];
               final name = item['name'] as String? ?? 'Unknown';
               final qty = item['quantity'] as int? ?? 1;
-              final price = (item['price'] as num?)?.toDouble() ?? 0;
+              final confRaw = item['confidence'];
+              final confidence = confRaw is num
+                  ? confRaw.toDouble()
+                  : double.tryParse(confRaw?.toString() ?? '0') ?? 0.0;
+              final confPercent = (confidence * 100).toInt();
+              final priceRaw = item['price'];
+              final price = priceRaw is num
+                  ? priceRaw.toDouble()
+                  : double.tryParse(priceRaw?.toString() ?? '0') ?? 0.0;
 
               return Container(
                 padding: const EdgeInsets.all(14),
@@ -334,9 +371,39 @@ class _CameraScreenState extends State<CameraScreen> {
                           Text(name,
                               style: const TextStyle(
                                   fontWeight: FontWeight.w600, fontSize: 14)),
-                          Text('x$qty',
-                              style: TextStyle(
-                                  color: Colors.grey.shade600, fontSize: 13)),
+                          Row(
+                            children: [
+                              Text('x$qty',
+                                  style: TextStyle(
+                                      color: Colors.grey.shade600,
+                                      fontSize: 13)),
+                              const SizedBox(width: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: confPercent >= 80
+                                      ? Colors.green.shade100
+                                      : confPercent >= 60
+                                          ? Colors.orange.shade100
+                                          : Colors.red.shade100,
+                                  borderRadius: BorderRadius.circular(6),
+                                ),
+                                child: Text(
+                                  '$confPercent%',
+                                  style: TextStyle(
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                    color: confPercent >= 80
+                                        ? Colors.green.shade700
+                                        : confPercent >= 60
+                                            ? Colors.orange.shade700
+                                            : Colors.red.shade700,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),

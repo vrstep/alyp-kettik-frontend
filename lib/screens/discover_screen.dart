@@ -174,7 +174,10 @@ class _ProductCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = product['name'] as String? ?? 'Unknown';
-    final price = (product['price'] as num?)?.toDouble() ?? 0;
+    final _priceRaw = product['price'];
+    final price = _priceRaw is num
+        ? _priceRaw.toDouble()
+        : double.tryParse(_priceRaw?.toString() ?? '0') ?? 0.0;
     final category = product['category'] as String?;
     final imageUrl = product['image_url'] as String?;
     final inStock = product['in_stock'] as int? ?? 0;

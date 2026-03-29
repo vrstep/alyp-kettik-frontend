@@ -63,7 +63,7 @@ class _HomePageState extends State<HomePage> {
           id: item["product_id"],
           name: item["name"],
           qty: item["quantity"],
-          price: (item["price"] as num).toInt(),
+          price: (item["price"] as num).toDouble(),
           createdAt: createdAt,
         ),
       );

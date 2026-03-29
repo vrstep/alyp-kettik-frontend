@@ -3,7 +3,7 @@ import 'dart:convert';
 class Product {
   final int id;
   final String name;
-  final int price;
+  final double price;
   final int qty;
   final DateTime createdAt;
 
@@ -31,7 +31,9 @@ class Product {
     return Product(
       id: json['id'],
       name: json['name'],
-      price: json['price'],
+      price: json['price'] is num 
+          ? (json['price'] as num).toDouble() 
+          : double.tryParse(json['price']?.toString() ?? '0') ?? 0.0,
       qty: json['quantity'],
       createdAt: DateTime.parse(json['createdAt']),
     );

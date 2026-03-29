@@ -246,7 +246,10 @@ class _CartItemCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final name = item['name'] as String? ?? 'Unknown';
-    final price = (item['price'] as num?)?.toDouble() ?? 0;
+    final _priceRaw = item['price'];
+    final price = _priceRaw is num
+        ? _priceRaw.toDouble()
+        : double.tryParse(_priceRaw?.toString() ?? '0') ?? 0.0;
     final qty = item['quantity'] as int? ?? 1;
     final productId = item['product_id'] as int? ?? 0;
 
