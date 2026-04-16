@@ -9,23 +9,37 @@ class AuthController extends GetxController {
   final Rx<String?> token = Rx<String?>(null);
   final Rx<Map<String, dynamic>?> user = Rx<Map<String, dynamic>?>(null);
   final RxBool isLoading = false.obs;
+  final RxBool isInitialized = false.obs;
 
   bool get isLoggedIn => token.value != null;
 
-  @override
-  void onInit() {
-    super.onInit();
-    _loadToken();
-  }
-
-  /// Load saved token from SharedPreferences on app start.
-  Future<void> _loadToken() async {
+  /// Restore session from persisted token + cached user. Called once before runApp.
+  Future<void> tryRestoreSession() async {
     final prefs = await SharedPreferences.getInstance();
-    final saved = prefs.getString('auth_token');
-    if (saved != null) {
-      token.value = saved;
+    final savedToken = prefs.getString('auth_token');
+    final savedUser = prefs.getString('auth_user');
+
+    if (savedToken != null) {
+      token.value = savedToken;
+
+      // Restore cached user data immediately (no network needed)
+      if (savedUser != null) {
+        try {
+          user.value = Map<String, dynamic>.from(jsonDecode(savedUser));
+        } catch (_) {}
+      }
+
+      // Then try to refresh from the server (non-blocking for the UI)
       await fetchUser();
     }
+    isInitialized.value = true;
+  }
+
+  /// Persist user data locally so it's available on next cold start.
+  Future<void> _cacheUser(Map<String, dynamic> userData) async {
+    user.value = userData;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('auth_user', jsonEncode(userData));
   }
 
   /// Common Authorization header.
@@ -50,9 +64,9 @@ class AuthController extends GetxController {
       if (res.statusCode == 201) {
         final data = jsonDecode(res.body);
         token.value = data['access_token'];
-        user.value = Map<String, dynamic>.from(data['user']);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token.value!);
+        await _cacheUser(Map<String, dynamic>.from(data['user']));
         return true;
       } else {
         final err = jsonDecode(res.body);
@@ -82,9 +96,9 @@ class AuthController extends GetxController {
       if (res.statusCode == 200) {
         final data = jsonDecode(res.body);
         token.value = data['access_token'];
-        user.value = Map<String, dynamic>.from(data['user']);
         final prefs = await SharedPreferences.getInstance();
         await prefs.setString('auth_token', token.value!);
+        await _cacheUser(Map<String, dynamic>.from(data['user']));
         return true;
       } else {
         final err = jsonDecode(res.body);
@@ -104,21 +118,23 @@ class AuthController extends GetxController {
     try {
       final res = await http.get(Uri.parse(meUrl), headers: authHeaders);
       if (res.statusCode == 200) {
-        user.value = jsonDecode(res.body);
-      } else {
-        // Token invalid – force logout
+        await _cacheUser(Map<String, dynamic>.from(jsonDecode(res.body)));
+      } else if (res.statusCode == 401 || res.statusCode == 403) {
+        // Token expired or revoked – force logout
         await logout();
       }
+      // Other errors (500, etc.) – keep token + cached user data
     } catch (_) {
-      // Network issue – keep token, user can retry
+      // Network issue – keep token + cached user data
     }
   }
 
-  /// Logout – clear token and user data.
+  /// Logout – clear token, user data, and all cached data.
   Future<void> logout() async {
     token.value = null;
     user.value = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
+    await prefs.remove('auth_user');
   }
 }

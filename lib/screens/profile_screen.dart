@@ -186,7 +186,7 @@ class ProfileScreen extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () async {
                       await auth.logout();
-                      session.clearSession();
+                      await session.clearSession();
                       Get.offAll(() => const LoginScreen());
                     },
                     icon: const Icon(Icons.logout_rounded, color: Colors.red),

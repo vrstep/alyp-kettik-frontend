@@ -56,6 +56,8 @@ class CartScreen extends StatelessWidget {
   }
 
   Widget _buildEmptyCart() {
+    final session = Get.find<SessionController>();
+
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -91,6 +93,28 @@ class CartScreen extends StatelessWidget {
                 fontSize: 15,
                 color: Colors.grey.shade600,
                 height: 1.5,
+              ),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: () => _endShopping(session),
+                icon: Icon(Icons.exit_to_app_rounded, color: Colors.red.shade400),
+                label: Text(
+                  'End Shopping',
+                  style: TextStyle(
+                    color: Colors.red.shade400,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.red.shade200, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
               ),
             ),
           ],
