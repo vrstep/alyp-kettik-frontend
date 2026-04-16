@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/session_controller.dart';
-import 'qr_scanner_screen.dart';
+import 'entry_qr_screen.dart';
+import 'thankyou.dart';
 
 class KeyScreen extends StatelessWidget {
   const KeyScreen({super.key});
@@ -17,13 +18,13 @@ class KeyScreen extends StatelessWidget {
           if (session.hasActiveSession) {
             return _buildGreetingView(context, session);
           }
-          return _buildScanView(context);
+          return _buildEntryView(context);
         }),
       ),
     );
   }
 
-  Widget _buildScanView(BuildContext context) {
+  Widget _buildEntryView(BuildContext context) {
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -53,7 +54,7 @@ class KeyScreen extends StatelessWidget {
                 ],
               ),
               child: const Icon(
-                Icons.qr_code_scanner_rounded,
+                Icons.qr_code_2_rounded,
                 size: 56,
                 color: Colors.white,
               ),
@@ -69,7 +70,7 @@ class KeyScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              'Scan the QR code at the store entrance\nto start your shopping session',
+              'Show your entry QR code at the\nstore turnstile to start shopping',
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 15,
@@ -83,11 +84,11 @@ class KeyScreen extends StatelessWidget {
               height: 56,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Get.to(() => const QrScannerScreen());
+                  Get.to(() => const EntryQrScreen());
                 },
-                icon: const Icon(Icons.qr_code_2_rounded, size: 24),
+                icon: const Icon(Icons.qr_code_rounded, size: 24),
                 label: const Text(
-                  'Scan QR Code',
+                  'Show Entry QR',
                   style: TextStyle(fontSize: 17, fontWeight: FontWeight.w600),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -187,6 +188,58 @@ class KeyScreen extends StatelessWidget {
                     ),
                   ),
                 ],
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              height: 48,
+              child: OutlinedButton.icon(
+                onPressed: () async {
+                  final confirmed = await Get.dialog<bool>(
+                    AlertDialog(
+                      title: const Text('Finish Shopping?'),
+                      content: const Text(
+                        'Your payment will be processed automatically.\nYou can walk out of the store.',
+                      ),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16)),
+                      actions: [
+                        TextButton(
+                          onPressed: () => Get.back(result: false),
+                          child: const Text('Cancel'),
+                        ),
+                        ElevatedButton(
+                          onPressed: () => Get.back(result: true),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.green.shade600,
+                            foregroundColor: Colors.white,
+                          ),
+                          child: const Text('Yes, Finish'),
+                        ),
+                      ],
+                    ),
+                  );
+                  if (confirmed == true) {
+                    await session.completeSession();
+                    Get.to(() => const ThankyouPage());
+                  }
+                },
+                icon: Icon(Icons.exit_to_app_rounded,
+                    color: Colors.red.shade400),
+                label: Text(
+                  'Finish Shopping',
+                  style: TextStyle(
+                    color: Colors.red.shade400,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(color: Colors.red.shade200, width: 1.5),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14)),
+                ),
               ),
             ),
           ],

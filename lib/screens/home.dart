@@ -37,7 +37,12 @@ class _HomePageState extends State<HomePage> {
   final _formKey = GlobalKey<FormState>();
 
   Future getImageFromGallery() async {
-    final pickedfile = await picker.pickImage(source: ImageSource.gallery);
+    final pickedfile = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
     setState(() {
       if (pickedfile != null) {
         _image = pickedfile;
@@ -46,7 +51,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   Future getImageFromCamera() async {
-    final pickedfile = await picker.pickImage(source: ImageSource.camera);
+    final pickedfile = await picker.pickImage(
+      source: ImageSource.camera,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
     setState(() {
       if (pickedfile != null) {
         _image = pickedfile;
