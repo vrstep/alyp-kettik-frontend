@@ -4,6 +4,8 @@ import 'package:get/get.dart';
 import '../controllers/auth_controller.dart';
 import '../controllers/session_controller.dart';
 import 'login_screen.dart';
+import 'payment_methods_screen.dart';
+import 'order_history_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -107,12 +109,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.credit_card_rounded,
                     title: 'Payment Methods',
                     subtitle: 'Manage your cards',
-                    onTap: () => Get.snackbar(
-                      'Coming Soon',
-                      'Payment management will be available soon',
-                      snackPosition: SnackPosition.BOTTOM,
-                      margin: const EdgeInsets.all(12),
-                    ),
+                    onTap: () => Get.to(() => const PaymentMethodsScreen()),
                   ),
                 ],
               ),
@@ -124,12 +121,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.receipt_long_rounded,
                     title: 'Order History',
                     subtitle: 'View past purchases & receipts',
-                    onTap: () => Get.snackbar(
-                      'Coming Soon',
-                      'Order history will be available soon',
-                      snackPosition: SnackPosition.BOTTOM,
-                      margin: const EdgeInsets.all(12),
-                    ),
+                    onTap: () => Get.to(() => const OrderHistoryScreen()),
                   ),
                   _SettingsItem(
                     icon: Icons.replay_rounded,

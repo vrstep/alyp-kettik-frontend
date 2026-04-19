@@ -20,3 +20,13 @@ String sessionCartUrl(String sessionId) =>
 
 // Products endpoints
 const String productsUrl = "$fastAPIUrl/products";
+
+// Payment endpoints
+const String paymentMethodsUrl = "$fastAPIUrl/payment/methods";
+const String paymentPayUrl = "$fastAPIUrl/payment/pay";
+const String paymentOrdersUrl = "$fastAPIUrl/payment/orders";
+String paymentOrderDetailUrl(String orderId) =>
+    "$fastAPIUrl/payment/orders/$orderId";
+String paymentMethodDefaultUrl(int id) =>
+    "$fastAPIUrl/payment/methods/$id/default";
+String paymentMethodDeleteUrl(int id) => "$fastAPIUrl/payment/methods/$id";
