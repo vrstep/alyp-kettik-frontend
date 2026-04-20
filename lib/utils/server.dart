@@ -9,6 +9,8 @@ const String uploadFileUrl = "$fastAPIUrl/recognize/file";
 const String registerUrl = "$fastAPIUrl/auth/register";
 const String loginUrl = "$fastAPIUrl/auth/login";
 const String meUrl = "$fastAPIUrl/auth/me";
+const String updateProfileUrl = "$fastAPIUrl/auth/profile";
+const String changePasswordUrl = "$fastAPIUrl/auth/password";
 
 // Session endpoints
 const String sessionEnterUrl = "$fastAPIUrl/sessions/enter";

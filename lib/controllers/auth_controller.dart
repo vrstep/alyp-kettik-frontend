@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -136,5 +137,67 @@ class AuthController extends GetxController {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('auth_token');
     await prefs.remove('auth_user');
+  }
+
+  /// Update user profile (name and/or email).
+  Future<bool> updateProfile({String? name, String? email}) async {
+    isLoading.value = true;
+    try {
+      final body = <String, dynamic>{};
+      if (name != null) body['name'] = name;
+      if (email != null) body['email'] = email;
+
+      final res = await http.put(
+        Uri.parse(updateProfileUrl),
+        headers: authHeaders,
+        body: jsonEncode(body),
+      );
+      if (res.statusCode == 200) {
+        await _cacheUser(Map<String, dynamic>.from(jsonDecode(res.body)));
+        Get.snackbar('Success', 'Profile updated',
+            snackPosition: SnackPosition.BOTTOM,
+            margin: const EdgeInsets.all(12));
+        return true;
+      } else {
+        final err = jsonDecode(res.body);
+        Get.snackbar('Error', err['detail'] ?? 'Could not update profile');
+        return false;
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Connection failed: $e');
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
+  }
+
+  /// Change password (requires current password for verification).
+  Future<bool> changePassword(String currentPassword, String newPassword) async {
+    isLoading.value = true;
+    try {
+      final res = await http.put(
+        Uri.parse(changePasswordUrl),
+        headers: authHeaders,
+        body: jsonEncode({
+          'current_password': currentPassword,
+          'new_password': newPassword,
+        }),
+      );
+      if (res.statusCode == 200) {
+        Get.snackbar('Success', 'Password changed',
+            snackPosition: SnackPosition.BOTTOM,
+            margin: const EdgeInsets.all(12));
+        return true;
+      } else {
+        final err = jsonDecode(res.body);
+        Get.snackbar('Error', err['detail'] ?? 'Could not change password');
+        return false;
+      }
+    } catch (e) {
+      Get.snackbar('Error', 'Connection failed: $e');
+      return false;
+    } finally {
+      isLoading.value = false;
+    }
   }
 }

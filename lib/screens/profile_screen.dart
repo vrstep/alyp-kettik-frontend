@@ -3,9 +3,11 @@ import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
 import '../controllers/session_controller.dart';
+import 'edit_profile_screen.dart';
 import 'login_screen.dart';
 import 'payment_methods_screen.dart';
 import 'order_history_screen.dart';
+import 'help_support_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({super.key});
@@ -98,12 +100,7 @@ class ProfileScreen extends StatelessWidget {
                     icon: Icons.person_outline_rounded,
                     title: 'Edit Profile',
                     subtitle: 'Name, email, password',
-                    onTap: () => Get.snackbar(
-                      'Coming Soon',
-                      'Profile editing will be available soon',
-                      snackPosition: SnackPosition.BOTTOM,
-                      margin: const EdgeInsets.all(12),
-                    ),
+                    onTap: () => Get.to(() => const EditProfileScreen()),
                   ),
                   _SettingsItem(
                     icon: Icons.credit_card_rounded,
@@ -143,13 +140,8 @@ class ProfileScreen extends StatelessWidget {
                   _SettingsItem(
                     icon: Icons.help_outline_rounded,
                     title: 'Help & Support',
-                    subtitle: 'FAQ, contact us',
-                    onTap: () => Get.snackbar(
-                      'Coming Soon',
-                      'Support will be available soon',
-                      snackPosition: SnackPosition.BOTTOM,
-                      margin: const EdgeInsets.all(12),
-                    ),
+                    subtitle: 'FAQ, contact us, onboarding',
+                    onTap: () => Get.to(() => const HelpSupportScreen()),
                   ),
                   _SettingsItem(
                     icon: Icons.info_outline_rounded,
