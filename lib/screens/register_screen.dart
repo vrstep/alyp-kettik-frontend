@@ -3,6 +3,7 @@ import 'package:get/get.dart';
 
 import '../controllers/auth_controller.dart';
 import 'main_shell.dart';
+import 'onboarding_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -131,7 +132,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                     _passwordCtrl.text,
                                   );
                                   if (ok) {
-                                    Get.offAll(() => const MainShell());
+                                    Get.offAll(() => const OnboardingScreen());
                                   }
                                 },
                           style: ElevatedButton.styleFrom(

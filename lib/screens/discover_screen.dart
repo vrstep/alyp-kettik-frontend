@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/product_controller.dart';
+import '../utils/product_images.dart';
 
 class DiscoverScreen extends StatelessWidget {
   const DiscoverScreen({super.key});
@@ -181,6 +182,7 @@ class _ProductCard extends StatelessWidget {
     final category = product['category'] as String?;
     final imageUrl = product['image_url'] as String?;
     final inStock = product['in_stock'] as int? ?? 0;
+    final localAsset = getProductImageAsset(name);
 
     return Container(
       decoration: BoxDecoration(
@@ -203,23 +205,36 @@ class _ProductCard extends StatelessWidget {
             child: Container(
               width: double.infinity,
               decoration: BoxDecoration(
-                color: Colors.grey.shade100,
+                color: Colors.white, // Changed to white to fit transparent PNGs
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(16),
                 ),
               ),
-              child: imageUrl != null && imageUrl.isNotEmpty
+              child: localAsset != null
                   ? ClipRRect(
                       borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(16),
                       ),
-                      child: Image.network(
-                        imageUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Image.asset(
+                          localAsset,
+                          fit: BoxFit.contain,
+                        ),
                       ),
                     )
-                  : _buildPlaceholder(),
+                  : imageUrl != null && imageUrl.isNotEmpty
+                      ? ClipRRect(
+                          borderRadius: const BorderRadius.vertical(
+                            top: Radius.circular(16),
+                          ),
+                          child: Image.network(
+                            imageUrl,
+                            fit: BoxFit.cover,
+                            errorBuilder: (_, __, ___) => _buildPlaceholder(),
+                          ),
+                        )
+                      : _buildPlaceholder(),
             ),
           ),
           // Info

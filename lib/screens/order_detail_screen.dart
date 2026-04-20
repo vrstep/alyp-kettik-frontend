@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/payment_controller.dart';
+import '../utils/product_images.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   final String orderId;
@@ -284,6 +285,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     final price = priceRaw is num
         ? priceRaw.toDouble()
         : double.tryParse(priceRaw?.toString() ?? '0') ?? 0.0;
+    final localAsset = getProductImageAsset(name);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -293,11 +295,19 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: localAsset != null ? Colors.white : Colors.blue.shade50,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(Icons.shopping_bag_outlined,
-                size: 18, color: Colors.blue.shade400),
+            child: localAsset != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Image.asset(localAsset, fit: BoxFit.contain),
+                    ),
+                  )
+                : Icon(Icons.shopping_bag_outlined,
+                    size: 18, color: Colors.blue.shade400),
           ),
           const SizedBox(width: 12),
           Expanded(
