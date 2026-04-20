@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:image_picker/image_picker.dart';
@@ -5,6 +7,7 @@ import 'package:http/http.dart' as http;
 
 import '../controllers/dto.dart';
 import '../controllers/session_controller.dart';
+import 'product_scanner_screen.dart';
 
 class CameraScreen extends StatefulWidget {
   const CameraScreen({super.key});
@@ -23,15 +26,25 @@ class _CameraScreenState extends State<CameraScreen> {
   List<Map<String, dynamic>> _recognizedItems = [];
   num _total = 0;
 
-  Future<void> _pickFromCamera() async {
-    final pickedFile = await _picker.pickImage(
-      source: ImageSource.camera,
-      maxWidth: 1024,
-      maxHeight: 1024,
-      imageQuality: 85,
+  /// Opens the custom full-screen scanner, then processes the captured image.
+  Future<void> _openScanner() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => const ProductScannerScreen(),
+      ),
     );
-    if (pickedFile != null) {
-      await _processImage(pickedFile);
+
+    if (result == null) return; // User cancelled
+
+    // If 'gallery' string is returned, open gallery picker
+    if (result is String && result == 'gallery') {
+      await _pickFromGallery();
+      return;
+    }
+
+    // Otherwise it's captured image bytes
+    if (result is Uint8List) {
+      await _processBytes(result, 'image/jpeg');
     }
   }
 
@@ -43,21 +56,20 @@ class _CameraScreenState extends State<CameraScreen> {
       imageQuality: 85,
     );
     if (pickedFile != null) {
-      await _processImage(pickedFile);
+      final ext = pickedFile.path.split('.').last.toLowerCase();
+      final mime = ext == 'png' ? 'image/png' : 'image/jpeg';
+      final bytes = await pickedFile.readAsBytes();
+      await _processBytes(bytes, mime);
     }
   }
 
-  Future<void> _processImage(XFile image) async {
+  Future<void> _processBytes(Uint8List bytes, String mime) async {
     _httpClient = http.Client();
     setState(() {
       isLoading = true;
       hasResult = false;
     });
     try {
-      final ext = image.path.split('.').last.toLowerCase();
-      final mime = ext == 'png' ? 'image/png' : 'image/jpeg';
-      final bytes = await image.readAsBytes();
-
       final record = await _dbOps.uploadPhoto(
         bytes,
         _httpClient!,
@@ -74,6 +86,24 @@ class _CameraScreenState extends State<CameraScreen> {
           .map((e) => Map<String, dynamic>.from(e as Map))
           .toList();
       final total = record["total"] as num;
+
+      // If nothing was recognized, show a warning and stay on scan screen
+      if (items.isEmpty) {
+        Get.snackbar(
+          'No Items Recognized',
+          'Could not identify any products. Please try again with a clearer photo.',
+          snackPosition: SnackPosition.BOTTOM,
+          margin: const EdgeInsets.all(12),
+          backgroundColor: Colors.orange.shade50,
+          colorText: Colors.orange.shade800,
+          icon: Icon(
+            Icons.warning_amber_rounded,
+            color: Colors.orange.shade700,
+          ),
+          duration: const Duration(seconds: 4),
+        );
+        return;
+      }
 
       setState(() {
         hasResult = true;
@@ -155,10 +185,7 @@ class _CameraScreenState extends State<CameraScreen> {
           const SizedBox(height: 24),
           const Text(
             'Recognizing products...',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
           Text(
@@ -169,8 +196,10 @@ class _CameraScreenState extends State<CameraScreen> {
           TextButton.icon(
             onPressed: _cancelRecognition,
             icon: const Icon(Icons.close_rounded, color: Colors.red),
-            label: const Text('Cancel',
-                style: TextStyle(color: Colors.red, fontSize: 15)),
+            label: const Text(
+              'Cancel',
+              style: TextStyle(color: Colors.red, fontSize: 15),
+            ),
           ),
         ],
       ),
@@ -239,16 +268,21 @@ class _CameraScreenState extends State<CameraScreen> {
                 child: SizedBox(
                   height: 56,
                   child: ElevatedButton.icon(
-                    onPressed: _pickFromCamera,
+                    onPressed: _openScanner,
                     icon: const Icon(Icons.camera_alt_rounded),
-                    label: const Text('Camera',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
+                    label: const Text(
+                      'Scan Items',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange.shade600,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       elevation: 2,
                     ),
                   ),
@@ -261,14 +295,19 @@ class _CameraScreenState extends State<CameraScreen> {
                   child: OutlinedButton.icon(
                     onPressed: _pickFromGallery,
                     icon: const Icon(Icons.photo_library_rounded),
-                    label: const Text('Gallery',
-                        style: TextStyle(
-                            fontSize: 16, fontWeight: FontWeight.w600)),
+                    label: const Text(
+                      'Gallery',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: Colors.orange.shade700,
                       side: BorderSide(color: Colors.orange.shade300, width: 2),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                     ),
                   ),
                 ),
@@ -289,10 +328,7 @@ class _CameraScreenState extends State<CameraScreen> {
           children: [
             const Text(
               'Recognized Items',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
             ),
             TextButton.icon(
               onPressed: _reset,
@@ -314,8 +350,11 @@ class _CameraScreenState extends State<CameraScreen> {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.smart_toy_rounded,
-                      size: 14, color: Colors.blue.shade600),
+                  Icon(
+                    Icons.smart_toy_rounded,
+                    size: 14,
+                    color: Colors.blue.shade600,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     'YOLO Detection',
@@ -370,27 +409,38 @@ class _CameraScreenState extends State<CameraScreen> {
                         color: Colors.green.shade100,
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(Icons.check_rounded,
-                          color: Colors.green.shade700),
+                      child: Icon(
+                        Icons.check_rounded,
+                        color: Colors.green.shade700,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(name,
-                              style: const TextStyle(
-                                  fontWeight: FontWeight.w600, fontSize: 14)),
+                          Text(
+                            name,
+                            style: const TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
                           Row(
                             children: [
-                              Text('x$qty',
-                                  style: TextStyle(
-                                      color: Colors.grey.shade600,
-                                      fontSize: 13)),
+                              Text(
+                                'x$qty',
+                                style: TextStyle(
+                                  color: Colors.grey.shade600,
+                                  fontSize: 13,
+                                ),
+                              ),
                               const SizedBox(width: 8),
                               Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6, vertical: 2),
+                                  horizontal: 6,
+                                  vertical: 2,
+                                ),
                                 decoration: BoxDecoration(
                                   color: confPercent >= 80
                                       ? Colors.green.shade100

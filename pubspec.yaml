@@ -13,6 +13,7 @@ dependencies:
   path:
   http:
   image_picker:
+  camera:
   flutter_lints: ^6.0.0
   mobile_scanner: ^6.0.2
   shared_preferences: ^2.3.4
@@ -28,7 +29,7 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/thanks.png
+    - assets/images/
 
   # fonts:
   #   - family: Schyler
