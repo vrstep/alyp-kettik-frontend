@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -149,33 +150,104 @@ class SessionController extends GetxController {
     } catch (_) {}
   }
 
-  /// Remove an item from the session cart.
-  Future<void> removeFromCart(int productId) async {
+  /// Remove an item from the session cart (optimistic).
+  Future<void> removeFromCart(int cartItemId) async {
     if (sessionId == null) return;
+
+    // Snapshot for rollback
+    final oldItems = List<Map<String, dynamic>>.from(
+      cartItems.map((e) => Map<String, dynamic>.from(e)),
+    );
+    final oldTotal = cartTotal.value;
+
+    // Optimistic: remove from local state immediately
+    cartItems.removeWhere((item) => item['id'] == cartItemId);
+    _recalcTotal();
+    _cacheSession();
+
+    // Background: send to backend
     try {
-      await http.delete(
-        Uri.parse('${sessionCartUrl(sessionId!)}/$productId'),
+      final res = await http.delete(
+        Uri.parse('${sessionCartUrl(sessionId!)}/$cartItemId'),
         headers: _auth.authHeaders,
       );
-      await fetchCart();
-    } catch (_) {}
+      if (res.statusCode != 200) {
+        // Revert on failure
+        cartItems.value = oldItems;
+        cartTotal.value = oldTotal;
+        _cacheSession();
+        Get.snackbar('Error', 'Failed to remove item',
+            snackPosition: SnackPosition.BOTTOM,
+            margin: const EdgeInsets.all(12));
+      }
+    } catch (_) {
+      // Revert on network error
+      cartItems.value = oldItems;
+      cartTotal.value = oldTotal;
+      _cacheSession();
+    }
   }
 
-  /// Update quantity of a cart item.
-  Future<void> updateCartItemQty(int productId, int quantity) async {
+  /// Update quantity of a cart item (optimistic).
+  Future<void> updateCartItemQty(int cartItemId, int quantity) async {
     if (sessionId == null) return;
     if (quantity <= 0) {
-      await removeFromCart(productId);
+      await removeFromCart(cartItemId);
       return;
     }
+
+    // Snapshot for rollback
+    final oldItems = List<Map<String, dynamic>>.from(
+      cartItems.map((e) => Map<String, dynamic>.from(e)),
+    );
+    final oldTotal = cartTotal.value;
+
+    // Optimistic: update local state immediately
+    final idx = cartItems.indexWhere((item) => item['id'] == cartItemId);
+    if (idx != -1) {
+      cartItems[idx] = Map<String, dynamic>.from(cartItems[idx])
+        ..['quantity'] = quantity;
+      cartItems.refresh();
+      _recalcTotal();
+      _cacheSession();
+    }
+
+    // Background: send to backend
     try {
-      await http.put(
-        Uri.parse('${sessionCartUrl(sessionId!)}/$productId'),
+      final res = await http.put(
+        Uri.parse('${sessionCartUrl(sessionId!)}/$cartItemId'),
         headers: _auth.authHeaders,
         body: jsonEncode({'quantity': quantity}),
       );
-      await fetchCart();
-    } catch (_) {}
+      if (res.statusCode != 200) {
+        // Revert on failure
+        cartItems.value = oldItems;
+        cartTotal.value = oldTotal;
+        _cacheSession();
+        Get.snackbar('Error', 'Failed to update quantity',
+            snackPosition: SnackPosition.BOTTOM,
+            margin: const EdgeInsets.all(12));
+      }
+    } catch (_) {
+      // Revert on network error
+      cartItems.value = oldItems;
+      cartTotal.value = oldTotal;
+      _cacheSession();
+    }
+  }
+
+  /// Recalculate cart total from local items.
+  void _recalcTotal() {
+    double total = 0;
+    for (final item in cartItems) {
+      final price = item['price'];
+      final qty = item['quantity'] as int? ?? 1;
+      final priceNum = price is num
+          ? price.toDouble()
+          : double.tryParse(price?.toString() ?? '0') ?? 0.0;
+      total += priceNum * qty;
+    }
+    cartTotal.value = total;
   }
 
   /// Complete the shopping session.

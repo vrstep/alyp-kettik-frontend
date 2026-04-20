@@ -5,6 +5,7 @@ import '../controllers/session_controller.dart';
 import '../controllers/payment_controller.dart';
 import 'payment_methods_screen.dart';
 import 'thankyou.dart';
+import '../utils/product_images.dart';
 
 class CartScreen extends StatelessWidget {
   const CartScreen({super.key});
@@ -527,7 +528,8 @@ class _CartItemCard extends StatelessWidget {
         ? _priceRaw.toDouble()
         : double.tryParse(_priceRaw?.toString() ?? '0') ?? 0.0;
     final qty = item['quantity'] as int? ?? 1;
-    final productId = item['product_id'] as int? ?? 0;
+    final cartItemId = item['id'] as int? ?? 0;  // cart item PK for update/delete
+    final localAsset = getProductImageAsset(name);
 
     return Container(
       padding: const EdgeInsets.all(14),
@@ -549,11 +551,18 @@ class _CartItemCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(
-              color: Colors.blue.shade50,
+              color: localAsset != null ? Colors.white : Colors.blue.shade50,
               borderRadius: BorderRadius.circular(12),
             ),
-            child:
-                Icon(Icons.shopping_bag_outlined, color: Colors.blue.shade600),
+            child: localAsset != null
+                ? ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Padding(
+                      padding: const EdgeInsets.all(4.0),
+                      child: Image.asset(localAsset, fit: BoxFit.contain),
+                    ),
+                  )
+                : Icon(Icons.shopping_bag_outlined, color: Colors.blue.shade600),
           ),
           const SizedBox(width: 14),
           // Name + price
@@ -600,9 +609,9 @@ class _CartItemCard extends StatelessWidget {
                         qty <= 1 ? Colors.red.shade400 : Colors.grey.shade600,
                     onTap: () {
                       if (qty <= 1) {
-                        session.removeFromCart(productId);
+                        session.removeFromCart(cartItemId);
                       } else {
-                        session.updateCartItemQty(productId, qty - 1);
+                        session.updateCartItemQty(cartItemId, qty - 1);
                       }
                     },
                   ),
@@ -618,7 +627,7 @@ class _CartItemCard extends StatelessWidget {
                     icon: Icons.add_rounded,
                     color: Colors.blue.shade600,
                     onTap: () =>
-                        session.updateCartItemQty(productId, qty + 1),
+                        session.updateCartItemQty(cartItemId, qty + 1),
                   ),
                 ],
               ),
